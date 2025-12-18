@@ -30,7 +30,7 @@ def upgrade() -> None:
         sa.Column('status', sa.String(50), default='processing'),
         sa.Column('uploaded_at', sa.DateTime(), server_default=sa.text('now()')),
         sa.Column('processed_at', sa.DateTime(), nullable=True),
-        sa.Column('metadata', postgresql.JSON, nullable=True),
+        sa.Column('meta_data', postgresql.JSON, nullable=True),
     )
 
     # Chat sessions table
@@ -62,7 +62,7 @@ def upgrade() -> None:
         sa.Column('content', sa.Text(), nullable=False),
         sa.Column('start_char', sa.Integer(), nullable=True),
         sa.Column('end_char', sa.Integer(), nullable=True),
-        sa.Column('metadata', postgresql.JSON, nullable=True),
+        sa.Column('meta_data', postgresql.JSON, nullable=True),
     )
 
     # Indexes

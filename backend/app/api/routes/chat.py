@@ -11,6 +11,7 @@ from app.services.rag_service import RAGService
 from app.services.llm_service import LLMService
 from app.services.search_service import SearchService
 from app.services.embedding_service import EmbeddingService
+from app.services.simple_fallback import SimpleFallback
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -148,9 +149,34 @@ async def ask_question(
                 ]
             
             except Exception as e:
-                # Fallback to LLM without context
-                answer = llm_service.generate_answer(question=request.question)
-                sources = []
+                # Check if it's an Ollama connection error
+                error_msg = str(e)
+                if "Ollama is not running" in error_msg or "Connection refused" in error_msg or "111" in error_msg:
+                    # Try simple fallback first
+                    fallback_response = SimpleFallback.get_fallback_response(request.question)
+                    if fallback_response:
+                        answer = fallback_response
+                        sources = []
+                    else:
+                        # Provide helpful error message
+                        answer = SimpleFallback.get_error_response()
+                        sources = []
+                else:
+                    # Fallback to LLM without context
+                    try:
+                        answer = llm_service.generate_answer(question=request.question)
+                        sources = []
+                    except Exception as e2:
+                        # Try simple fallback
+                        fallback_response = SimpleFallback.get_fallback_response(request.question)
+                        if fallback_response:
+                            answer = fallback_response
+                            sources = []
+                        else:
+                            raise HTTPException(
+                                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                                detail=f"AI service unavailable: {str(e2)}"
+                            )
         
         # Save assistant message
         assistant_message = ChatMessage(

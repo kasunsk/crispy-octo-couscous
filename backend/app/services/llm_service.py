@@ -71,6 +71,18 @@ class LLMService:
             
             return result.get("response", "").strip()
         
+        except httpx.ConnectError as e:
+            error_msg = str(e)
+            if "Connection refused" in error_msg or "111" in error_msg:
+                logger.error(f"Ollama connection refused. Is Ollama running at {self.base_url}?")
+                raise Exception(
+                    f"Ollama is not running or not accessible at {self.base_url}. "
+                    f"Please install and start Ollama, then pull a model (e.g., 'ollama pull llama3:8b'). "
+                    f"See OLLAMA_SETUP.md for instructions."
+                )
+            else:
+                logger.error(f"Ollama connection error: {str(e)}")
+                raise Exception(f"Failed to connect to Ollama: {str(e)}")
         except Exception as e:
             logger.error(f"Error generating answer: {str(e)}")
             raise Exception(f"Failed to generate answer: {str(e)}")
@@ -111,6 +123,18 @@ class LLMService:
             
             return result.get("message", {}).get("content", "").strip()
         
+        except httpx.ConnectError as e:
+            error_msg = str(e)
+            if "Connection refused" in error_msg or "111" in error_msg:
+                logger.error(f"Ollama connection refused. Is Ollama running at {self.base_url}?")
+                raise Exception(
+                    f"Ollama is not running or not accessible at {self.base_url}. "
+                    f"Please install and start Ollama, then pull a model (e.g., 'ollama pull llama3:8b'). "
+                    f"See OLLAMA_SETUP.md for instructions."
+                )
+            else:
+                logger.error(f"Ollama connection error: {str(e)}")
+                raise Exception(f"Failed to connect to Ollama: {str(e)}")
         except Exception as e:
             logger.error(f"Error in chat: {str(e)}")
             raise Exception(f"Failed to chat: {str(e)}")

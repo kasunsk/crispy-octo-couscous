@@ -2,6 +2,7 @@
 from fastapi import APIRouter, HTTPException
 from app.services.llm_service import LLMService
 from pydantic import BaseModel
+from typing import List
 
 router = APIRouter(prefix="/api", tags=["health"])
 

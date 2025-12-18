@@ -12,7 +12,6 @@ const queryClient = new QueryClient();
 function AppContent() {
   const {
     documents,
-    selectedDocument,
     setDocuments,
     setError,
     error,
@@ -24,7 +23,7 @@ function AppContent() {
     documentApi
       .list()
       .then(setDocuments)
-      .catch((err) => setError('Failed to load documents'));
+      .catch(() => setError('Failed to load documents'));
 
     // Check health
     healthApi
