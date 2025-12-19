@@ -61,3 +61,4 @@ class SimpleFallback:
             "Once Ollama is running, I'll be able to answer your questions!"
         )
 
+

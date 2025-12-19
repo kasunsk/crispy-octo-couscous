@@ -1,4 +1,4 @@
-import { User, Bot, ExternalLink } from 'lucide-react';
+import { User, Bot } from 'lucide-react';
 import { ChatMessage as ChatMessageType } from '../services/api';
 import clsx from 'clsx';
 
@@ -31,45 +31,6 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         )}
       >
         <p className="whitespace-pre-wrap">{message.content}</p>
-
-        {/* Sources */}
-        {message.sources && message.sources.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
-            <p className="text-xs font-semibold mb-2 opacity-75">Sources:</p>
-            <div className="space-y-1">
-              {message.sources.map((source, idx) => (
-                <div key={idx} className="text-xs opacity-75">
-                  {source.url ? (
-                    <a
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 hover:underline"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      {source.title || source.url}
-                    </a>
-                  ) : (
-                    <div>
-                      {source.content && (
-                        <p className="italic">
-                          {source.content.length > 150
-                            ? `${source.content.substring(0, 150)}...`
-                            : source.content}
-                        </p>
-                      )}
-                      {source.similarity && (
-                        <p className="text-xs opacity-60">
-                          Similarity: {(source.similarity * 100).toFixed(1)}%
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {isUser && (
@@ -80,4 +41,5 @@ export default function ChatMessage({ message }: ChatMessageProps) {
     </div>
   );
 }
+
 

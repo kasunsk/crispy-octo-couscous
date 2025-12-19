@@ -58,3 +58,4 @@ echo "📋 View logs: docker-compose logs -f"
 echo "🛑 Stop: docker-compose down"
 echo ""
 
+

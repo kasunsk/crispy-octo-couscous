@@ -122,3 +122,4 @@ def chunk_by_paragraphs(text: str, max_chunk_size: int = 1000) -> List[dict]:
     
     return chunks
 
+

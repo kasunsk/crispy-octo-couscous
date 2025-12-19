@@ -49,14 +49,14 @@ services:
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
       - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3:8b}
       - API_HOST=0.0.0.0
       - API_PORT=8000
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
       - UPLOAD_DIR=/app/uploads
       - EMBEDDING_MODEL=${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:

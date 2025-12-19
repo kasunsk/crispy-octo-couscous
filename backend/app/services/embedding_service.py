@@ -192,6 +192,54 @@ class EmbeddingService:
             logger.error(f"Error searching similar chunks: {str(e)}")
             raise
     
+    def get_all_chunks(
+        self,
+        collection_name: str,
+        document_id: str,
+        limit: int = 50
+    ) -> List[dict]:
+        """
+        Get all chunks for a document from vector database.
+        
+        Args:
+            collection_name: Name of the collection
+            document_id: UUID of the document
+            limit: Maximum number of chunks to return
+        
+        Returns:
+            List of chunks with metadata
+        """
+        try:
+            collection = self.get_or_create_collection(collection_name)
+            
+            # Get all chunks for this document
+            results = collection.get(
+                where={"document_id": str(document_id)},
+                limit=limit
+            )
+            
+            # Format results
+            chunks = []
+            if results["ids"] and len(results["ids"]) > 0:
+                for i in range(len(results["ids"])):
+                    chunks.append({
+                        "chunk_id": results["ids"][i],
+                        "content": results["documents"][i],
+                        "metadata": results["metadatas"][i] if results["metadatas"] else {}
+                    })
+            
+            # Sort by chunk_index if available
+            try:
+                chunks.sort(key=lambda x: x.get("metadata", {}).get("chunk_index", 0))
+            except:
+                pass
+            
+            return chunks
+        
+        except Exception as e:
+            logger.error(f"Error getting all chunks: {str(e)}")
+            raise
+    
     def delete_document(self, collection_name: str, document_id: str):
         """Delete all chunks for a document from vector database."""
         try:
@@ -201,4 +249,5 @@ class EmbeddingService:
         except Exception as e:
             logger.error(f"Error deleting document: {str(e)}")
             raise
+
 

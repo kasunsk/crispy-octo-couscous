@@ -64,3 +64,4 @@ export const useStore = create<AppState>((set) => ({
   setError: (error) => set({ error }),
 }));
 
+

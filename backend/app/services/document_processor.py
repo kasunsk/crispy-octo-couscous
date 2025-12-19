@@ -146,3 +146,4 @@ class DocumentProcessor:
             "file_type": file_path.suffix[1:].lower() if file_path.suffix else "unknown"
         }
 
+

@@ -72,3 +72,4 @@ Once Ollama is running:
 2. The connection status should change from "Disconnected" to "Connected"
 3. You can now ask questions and upload documents
 
+

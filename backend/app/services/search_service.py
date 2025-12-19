@@ -5,6 +5,14 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 import re
+import time
+
+# Try to import DuckDuckGo exception, fallback to generic Exception if not available
+try:
+    from duckduckgo_search.exceptions import DuckDuckGoSearchException
+except ImportError:
+    # Fallback for older versions
+    DuckDuckGoSearchException = Exception
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +30,14 @@ class SearchService:
         self.max_results = max_results
         logger.info("Search service initialized")
     
-    def search(self, query: str, max_results: Optional[int] = None) -> List[Dict]:
+    def search(self, query: str, max_results: Optional[int] = None, retries: int = 3) -> List[Dict]:
         """
-        Search the internet for a query.
+        Search the internet for a query with retry logic.
         
         Args:
             query: Search query
             max_results: Maximum number of results (overrides default)
+            retries: Number of retry attempts
         
         Returns:
             List of search results with title, url, and snippet
@@ -36,27 +45,54 @@ class SearchService:
         if max_results is None:
             max_results = self.max_results
         
-        try:
-            results = []
-            with DDGS() as ddgs:
-                search_results = ddgs.text(
-                    query,
-                    max_results=max_results
-                )
+        for attempt in range(retries):
+            try:
+                results = []
+                with DDGS() as ddgs:
+                    search_results = ddgs.text(
+                        query,
+                        max_results=max_results
+                    )
+                    
+                    for result in search_results:
+                        results.append({
+                            "title": result.get("title", ""),
+                            "url": result.get("href", ""),
+                            "snippet": result.get("body", "")
+                        })
                 
-                for result in search_results:
-                    results.append({
-                        "title": result.get("title", ""),
-                        "url": result.get("href", ""),
-                        "snippet": result.get("body", "")
-                    })
+                if results:
+                    logger.info(f"Found {len(results)} search results for query: {query}")
+                    return results
+                else:
+                    logger.warning(f"No results found for query: {query} (attempt {attempt + 1}/{retries})")
             
-            logger.info(f"Found {len(results)} search results for query: {query}")
-            return results
+            except DuckDuckGoSearchException as e:
+                error_msg = str(e).lower()
+                if "ratelimit" in error_msg or "rate limit" in error_msg:
+                    if attempt < retries - 1:
+                        wait_time = (attempt + 1) * 2  # Exponential backoff: 2s, 4s, 6s
+                        logger.warning(f"Rate limited. Waiting {wait_time}s before retry {attempt + 2}/{retries}")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        logger.error(f"Rate limited after {retries} attempts: {str(e)}")
+                        return []
+                else:
+                    logger.error(f"DuckDuckGo search error: {str(e)}")
+                    if attempt < retries - 1:
+                        time.sleep(1)
+                        continue
+                    return []
+            
+            except Exception as e:
+                logger.error(f"Error searching (attempt {attempt + 1}/{retries}): {str(e)}")
+                if attempt < retries - 1:
+                    time.sleep(1)
+                    continue
+                return []
         
-        except Exception as e:
-            logger.error(f"Error searching: {str(e)}")
-            return []
+        return []
     
     def extract_content_from_url(self, url: str, max_length: int = 2000) -> Optional[str]:
         """
@@ -110,29 +146,40 @@ class SearchService:
             num_sources: Number of sources to extract content from
         
         Returns:
-            Combined context from search results
+            Combined context from search results, or empty string if search fails
         """
-        # Get search results
+        # Get search results with retries
         search_results = self.search(query, max_results=num_sources)
         
         if not search_results:
-            return "No search results found."
+            logger.warning(f"Search returned no results for query: {query}")
+            return ""
         
         # Extract content from top results
         contexts = []
         for i, result in enumerate(search_results[:num_sources]):
             url = result.get("url", "")
             snippet = result.get("snippet", "")
+            title = result.get("title", "Unknown")
             
             # Try to get more content from URL
             if url:
-                content = self.extract_content_from_url(url)
-                if content:
-                    contexts.append(f"Source {i+1} ({result.get('title', 'Unknown')}):\n{content}\n")
-                elif snippet:
-                    contexts.append(f"Source {i+1} ({result.get('title', 'Unknown')}):\n{snippet}\n")
+                try:
+                    content = self.extract_content_from_url(url)
+                    if content:
+                        contexts.append(f"Source {i+1} ({title}):\n{content}\n")
+                    elif snippet:
+                        contexts.append(f"Source {i+1} ({title}):\n{snippet}\n")
+                except Exception as e:
+                    logger.warning(f"Failed to extract content from {url}: {str(e)}")
+                    if snippet:
+                        contexts.append(f"Source {i+1} ({title}):\n{snippet}\n")
             elif snippet:
-                contexts.append(f"Source {i+1} ({result.get('title', 'Unknown')}):\n{snippet}\n")
+                contexts.append(f"Source {i+1} ({title}):\n{snippet}\n")
         
-        return "\n\n".join(contexts)
+        if contexts:
+            return "\n\n".join(contexts)
+        else:
+            return ""
+
 

@@ -89,3 +89,4 @@ docker-compose logs -f backend
 - See `SETUP.md` for manual setup instructions
 - See `OLLAMA_SETUP.md` for detailed Ollama setup
 
+

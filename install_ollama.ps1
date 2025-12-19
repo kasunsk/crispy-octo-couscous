@@ -95,4 +95,3 @@ if ($ollamaRunning) {
     Write-Host "=== Setup Incomplete ===" -ForegroundColor Red
     Write-Host "Please ensure Ollama is running before using the application." -ForegroundColor Yellow
 }
-

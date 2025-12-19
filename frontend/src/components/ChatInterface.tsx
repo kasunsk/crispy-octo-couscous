@@ -105,7 +105,7 @@ export default function ChatInterface() {
             <>
               <Globe className="w-5 h-5 text-green-500" />
               <span className="font-medium text-gray-700 dark:text-gray-300">
-                General Questions (Internet)
+                General Questions
               </span>
             </>
           )}
@@ -166,4 +166,5 @@ export default function ChatInterface() {
     </div>
   );
 }
+
 
